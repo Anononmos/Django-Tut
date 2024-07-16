@@ -2,7 +2,10 @@ from django.db import models
 from django.urls import reverse # Used in get_absolute_url() to get URL for specified id
 from django.db.models import UniqueConstraint   # Constrains fields to unique values 
 from django.db.models.functions import Lower    # Returns lower cased value of field
+from django.conf import settings
+# from django.contrib.auth.models import User
 from uuid import uuid4 as uuid
+from datetime import date
 
 # Create your models here.
 
@@ -128,8 +131,17 @@ class BookInstance(models.Model):
         help_text='Book availability.'
     )
 
+    borrower = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    # borrower = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
     class Meta:
         ordering = ['due_back']
+
+    @property
+    def is_overdue(self):
+        """Determines if the book is overdue based on due date and current date."""
+        return bool(self.due_back and date.today() > self.due_back)
+
 
     def __str__(self):
         return f'{self.id} ({ self.book.title })'
